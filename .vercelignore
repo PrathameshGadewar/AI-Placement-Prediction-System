@@ -1,0 +1,9 @@
+requirements.txt
+train.py
+backend/
+dataset/
+saved_models/
+reports/
+venv/
+.venv/
+__pycache__/
