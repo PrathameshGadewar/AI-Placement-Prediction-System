@@ -1,0 +1,75 @@
+=== MODEL PERFORMANCE & BENCHMARK SUMMARY ===
+Selected Best Model: Random Forest
+
+-----------------------------------------
+MODEL: Logistic Regression
+Accuracy: 0.8722 | F1 Score: 0.8233 | ROC AUC: 0.9362
+              precision    recall  f1-score   support
+
+  Not Placed       0.90      0.90      0.90      3188
+      Placed       0.82      0.82      0.82      1812
+
+    accuracy                           0.87      5000
+   macro avg       0.86      0.86      0.86      5000
+weighted avg       0.87      0.87      0.87      5000
+
+-----------------------------------------
+MODEL: Decision Tree
+Accuracy: 0.9996 | F1 Score: 0.9994 | ROC AUC: 0.9994
+              precision    recall  f1-score   support
+
+  Not Placed       1.00      1.00      1.00      3188
+      Placed       1.00      1.00      1.00      1812
+
+    accuracy                           1.00      5000
+   macro avg       1.00      1.00      1.00      5000
+weighted avg       1.00      1.00      1.00      5000
+
+-----------------------------------------
+MODEL: Random Forest
+Accuracy: 1.0 | F1 Score: 1.0 | ROC AUC: 1.0
+              precision    recall  f1-score   support
+
+  Not Placed       1.00      1.00      1.00      3188
+      Placed       1.00      1.00      1.00      1812
+
+    accuracy                           1.00      5000
+   macro avg       1.00      1.00      1.00      5000
+weighted avg       1.00      1.00      1.00      5000
+
+-----------------------------------------
+MODEL: Support Vector Machine
+Accuracy: 0.8688 | F1 Score: 0.8156 | ROC AUC: 0.9353
+              precision    recall  f1-score   support
+
+  Not Placed       0.89      0.91      0.90      3188
+      Placed       0.83      0.80      0.82      1812
+
+    accuracy                           0.87      5000
+   macro avg       0.86      0.85      0.86      5000
+weighted avg       0.87      0.87      0.87      5000
+
+-----------------------------------------
+MODEL: KNN
+Accuracy: 0.9374 | F1 Score: 0.9167 | ROC AUC: 0.9825
+              precision    recall  f1-score   support
+
+  Not Placed       0.97      0.93      0.95      3188
+      Placed       0.89      0.95      0.92      1812
+
+    accuracy                           0.94      5000
+   macro avg       0.93      0.94      0.93      5000
+weighted avg       0.94      0.94      0.94      5000
+
+-----------------------------------------
+MODEL: XGBoost
+Accuracy: 0.9998 | F1 Score: 0.9997 | ROC AUC: 1.0
+              precision    recall  f1-score   support
+
+  Not Placed       1.00      1.00      1.00      3188
+      Placed       1.00      1.00      1.00      1812
+
+    accuracy                           1.00      5000
+   macro avg       1.00      1.00      1.00      5000
+weighted avg       1.00      1.00      1.00      5000
+

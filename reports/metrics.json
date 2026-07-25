@@ -1,0 +1,131 @@
+{
+    "best_model": "Random Forest",
+    "metrics": {
+        "Logistic Regression": {
+            "accuracy": 0.8722,
+            "precision": 0.8249,
+            "recall": 0.8217,
+            "f1_score": 0.8233,
+            "roc_auc": 0.9362,
+            "cv_score": 0.8154,
+            "train_time_sec": 0.0413,
+            "pred_time_sec": 0.0028,
+            "confusion_matrix": [
+                [
+                    2872,
+                    316
+                ],
+                [
+                    323,
+                    1489
+                ]
+            ],
+            "classification_report": "              precision    recall  f1-score   support\n\n  Not Placed       0.90      0.90      0.90      3188\n      Placed       0.82      0.82      0.82      1812\n\n    accuracy                           0.87      5000\n   macro avg       0.86      0.86      0.86      5000\nweighted avg       0.87      0.87      0.87      5000\n"
+        },
+        "Decision Tree": {
+            "accuracy": 0.9996,
+            "precision": 1.0,
+            "recall": 0.9989,
+            "f1_score": 0.9994,
+            "roc_auc": 0.9994,
+            "cv_score": 0.9998,
+            "train_time_sec": 0.0657,
+            "pred_time_sec": 0.001,
+            "confusion_matrix": [
+                [
+                    3188,
+                    0
+                ],
+                [
+                    2,
+                    1810
+                ]
+            ],
+            "classification_report": "              precision    recall  f1-score   support\n\n  Not Placed       1.00      1.00      1.00      3188\n      Placed       1.00      1.00      1.00      1812\n\n    accuracy                           1.00      5000\n   macro avg       1.00      1.00      1.00      5000\nweighted avg       1.00      1.00      1.00      5000\n"
+        },
+        "Random Forest": {
+            "accuracy": 1.0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0,
+            "roc_auc": 1.0,
+            "cv_score": 1.0,
+            "train_time_sec": 0.4884,
+            "pred_time_sec": 0.0318,
+            "confusion_matrix": [
+                [
+                    3188,
+                    0
+                ],
+                [
+                    0,
+                    1812
+                ]
+            ],
+            "classification_report": "              precision    recall  f1-score   support\n\n  Not Placed       1.00      1.00      1.00      3188\n      Placed       1.00      1.00      1.00      1812\n\n    accuracy                           1.00      5000\n   macro avg       1.00      1.00      1.00      5000\nweighted avg       1.00      1.00      1.00      5000\n"
+        },
+        "Support Vector Machine": {
+            "accuracy": 0.8688,
+            "precision": 0.831,
+            "recall": 0.8008,
+            "f1_score": 0.8156,
+            "roc_auc": 0.9353,
+            "cv_score": 0.8146,
+            "train_time_sec": 0.1252,
+            "pred_time_sec": 0.0009,
+            "confusion_matrix": [
+                [
+                    2893,
+                    295
+                ],
+                [
+                    361,
+                    1451
+                ]
+            ],
+            "classification_report": "              precision    recall  f1-score   support\n\n  Not Placed       0.89      0.91      0.90      3188\n      Placed       0.83      0.80      0.82      1812\n\n    accuracy                           0.87      5000\n   macro avg       0.86      0.85      0.86      5000\nweighted avg       0.87      0.87      0.87      5000\n"
+        },
+        "KNN": {
+            "accuracy": 0.9374,
+            "precision": 0.8853,
+            "recall": 0.9503,
+            "f1_score": 0.9167,
+            "roc_auc": 0.9825,
+            "cv_score": 0.9187,
+            "train_time_sec": 0.005,
+            "pred_time_sec": 2.1746,
+            "confusion_matrix": [
+                [
+                    2965,
+                    223
+                ],
+                [
+                    90,
+                    1722
+                ]
+            ],
+            "classification_report": "              precision    recall  f1-score   support\n\n  Not Placed       0.97      0.93      0.95      3188\n      Placed       0.89      0.95      0.92      1812\n\n    accuracy                           0.94      5000\n   macro avg       0.93      0.94      0.93      5000\nweighted avg       0.94      0.94      0.94      5000\n"
+        },
+        "XGBoost": {
+            "accuracy": 0.9998,
+            "precision": 0.9994,
+            "recall": 1.0,
+            "f1_score": 0.9997,
+            "roc_auc": 1.0,
+            "cv_score": 1.0,
+            "train_time_sec": 0.1756,
+            "pred_time_sec": 0.0062,
+            "confusion_matrix": [
+                [
+                    3187,
+                    1
+                ],
+                [
+                    0,
+                    1812
+                ]
+            ],
+            "classification_report": "              precision    recall  f1-score   support\n\n  Not Placed       1.00      1.00      1.00      3188\n      Placed       1.00      1.00      1.00      1812\n\n    accuracy                           1.00      5000\n   macro avg       1.00      1.00      1.00      5000\nweighted avg       1.00      1.00      1.00      5000\n"
+        }
+    }
+}
