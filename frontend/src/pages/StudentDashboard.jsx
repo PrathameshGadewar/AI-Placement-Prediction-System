@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { predictService } from '../services/api';
+import { parseResumeClient, predictDatasetModel } from '../utils/clientModel';
 
 const StudentDashboard = () => {
   const [subtab, setSubtab] = useState('manual'); // 'manual' or 'resume'
@@ -33,49 +34,6 @@ const StudentDashboard = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const calculateClientScore = () => {
-    const cgpa = formData.CGPA;
-    const apt = formData.Aptitude_Test_Score;
-    const code = formData.Coding_Skills;
-    const comm = formData.Communication_Skills;
-    const intern = formData.Internships;
-    const proj = formData.Projects;
-    const cert = formData.Certifications;
-    const back = formData.Backlogs;
-
-    const contributions = [
-      { name: 'CGPA', val: (cgpa / 10) * 25 },
-      { name: 'Aptitude', val: (apt / 100) * 20 },
-      { name: 'Coding Skills', val: (code / 10) * 22 },
-      { name: 'Communication', val: (comm / 10) * 14 },
-      { name: 'Internships', val: (Math.min(intern, 3) / 3) * 9 },
-      { name: 'Projects', val: (Math.min(proj, 5) / 5) * 7 },
-      { name: 'Certifications', val: (Math.min(cert, 5) / 5) * 4 },
-      { name: 'Backlogs', val: -back * 7 },
-    ];
-
-    let score = contributions.reduce((s, c) => s + c.val, 5);
-    score = Math.max(2, Math.min(98, score));
-
-    const baseline = 12.5;
-    const sorted = [...contributions].sort((a, b) => Math.abs(b.val - baseline) - Math.abs(a.val - baseline)).slice(0, 5);
-    const maxAbs = Math.max(...sorted.map((c) => Math.abs(c.val - baseline)), 1);
-
-    const factorList = sorted.map((c) => {
-      const delta = c.val - baseline;
-      const pct = Math.min(100, (Math.abs(delta) / maxAbs) * 100);
-      const positive = delta >= 0;
-      return {
-        feature: c.name,
-        impact: (positive ? '+' : '') + delta.toFixed(1),
-        pct,
-        positive
-      };
-    });
-
-    return { score, factorList };
-  };
-
   const startAnalyzingSequence = (onComplete) => {
     setAnalyzing(true);
     setPrediction(null);
@@ -100,7 +58,7 @@ const StudentDashboard = () => {
     setLoading(true);
     setError('');
 
-    const clientCalc = calculateClientScore();
+    const clientPrediction = predictDatasetModel(formData);
 
     try {
       const res = await predictService.predictManual(formData);
@@ -128,13 +86,9 @@ const StudentDashboard = () => {
       });
 
     } catch (err) {
+      // Offline / Vercel fallback: compute using trained dataset model
       startAnalyzingSequence(() => {
-        setPrediction({
-          placement_probability: clientCalc.score,
-          placement_status: clientCalc.score >= 50 ? 'Placed' : 'Not Placed',
-          risk_level: clientCalc.score < 40 ? 'High' : clientCalc.score < 70 ? 'Medium' : 'Low',
-          factors: clientCalc.factorList
-        });
+        setPrediction(clientPrediction);
         setLoading(false);
       });
     }
@@ -157,13 +111,16 @@ const StudentDashboard = () => {
       setAnalysisStep('Running XGBoost Model Inference & Calculating SHAP Values...');
     }, 3200);
 
+    // Client NLP resume parsing
+    const extractedInfo = await parseResumeClient(file);
+
     const bodyData = new FormData();
     bodyData.append('file', file);
 
     try {
       const res = await predictService.predictResume(bodyData);
       setTimeout(() => {
-        const extracted = res.data.extracted_info;
+        const extracted = res.data.extracted_info || extractedInfo;
         if (extracted && extracted.form_fields) {
           setFormData((prev) => ({
             ...prev,
@@ -193,10 +150,19 @@ const StudentDashboard = () => {
       }, 5000);
 
     } catch (err) {
+      // Fallback for Vercel / offline mode: compute via dataset model
       setTimeout(() => {
-        setError('Failed to extract resume data. Try manual entry.');
+        if (extractedInfo && extractedInfo.form_fields) {
+          setFormData((prev) => ({
+            ...prev,
+            ...extractedInfo.form_fields,
+            Name: extractedInfo.name || prev.Name
+          }));
+        }
+        const fallbackPred = predictDatasetModel(extractedInfo.form_fields);
+        setPrediction(fallbackPred);
         setAnalyzing(false);
-      }, 1000);
+      }, 5000);
     }
   };
 
