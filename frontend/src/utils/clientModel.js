@@ -12,30 +12,26 @@ export const parseResumeClient = async (file) => {
       if (typeof content === 'string') {
         text = content;
       } else {
-        // Text decoder for binary/PDF buffer snippets
         const decoder = new TextDecoder('utf-8', { fatal: false });
         text = decoder.decode(new Uint8Array(content));
       }
 
-      // 1. Extract Name from filename or top text
       let candidateName = file.name ? file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ') : 'Candidate';
       candidateName = candidateName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
-      // 2. Extract CGPA using regex patterns
       let cgpa = 7.8;
       const cgpaMatch = text.match(/(?:cgpa|gpa|pointer|percentage)[\s:]*([5-9]\.[0-9]{1,2}|10\.0)/i);
       if (cgpaMatch && cgpaMatch[1]) {
         cgpa = parseFloat(cgpaMatch[1]);
       } else {
-        // Fallback: estimate from length and quality signals
         cgpa = +(7.5 + (file.size % 20) / 10).toFixed(1);
       }
 
-      // 3. Extract Skills from text
       const skillBank = [
         'Python', 'React.js', 'React', 'FastAPI', 'SQL', 'Docker', 'C++', 'Java',
         'Data Structures', 'Algorithms', 'Machine Learning', 'Git', 'AWS', 'Node.js',
-        'HTML', 'CSS', 'JavaScript', 'Communication', 'Problem-Solving', 'Cybersecurity'
+        'HTML', 'CSS', 'JavaScript', 'Communication', 'Problem-Solving', 'Cybersecurity',
+        'TypeScript', 'MongoDB', 'PostgreSQL', 'Express', 'Redux'
       ];
 
       const detectedSkills = [];
@@ -46,12 +42,10 @@ export const parseResumeClient = async (file) => {
         }
       });
 
-      // Default core skills if minimal binary text
       if (detectedSkills.length === 0) {
         detectedSkills.push('Python', 'React.js', 'FastAPI', 'SQL', 'Communication');
       }
 
-      // 4. Infer profile parameters for dataset model
       const codingSkills = Math.min(10, Math.max(5, detectedSkills.length + 3));
       const commSkills = Math.min(10, Math.max(6, 7 + (detectedSkills.includes('Communication') ? 2 : 0)));
       const projectsCount = Math.max(2, (text.match(/project/gi) || []).length || 3);
@@ -74,14 +68,13 @@ export const parseResumeClient = async (file) => {
           Certifications: Math.min(5, certsCount),
           Backlogs: backlogsCount
         },
-        detected_skills: detectedSkills
+        detected_skills: Array.from(new Set(detectedSkills))
       };
 
       resolve(extractedInfo);
     };
 
     reader.onerror = () => {
-      // Fallback object on read error
       const name = file.name ? file.name.replace(/\.[^/.]+$/, '') : 'Student Profile';
       resolve({
         name: name,
@@ -102,7 +95,6 @@ export const parseResumeClient = async (file) => {
       });
     };
 
-    // Try reading text, fallback to array buffer
     try {
       reader.readAsText(file);
     } catch (err) {
@@ -122,7 +114,6 @@ export const predictDatasetModel = (formData) => {
   const cert = Number(formData.Certifications) || 1;
   const back = Number(formData.Backlogs) || 0;
 
-  // ML Feature Weights derived from trained dataset
   const contributions = [
     { feature: 'CGPA', impact: ((cgpa / 10) * 25).toFixed(1), rawVal: (cgpa / 10) * 25 },
     { feature: 'Coding Skills', impact: ((code / 10) * 22).toFixed(1), rawVal: (code / 10) * 22 },
@@ -162,40 +153,54 @@ export const predictDatasetModel = (formData) => {
 
 // ATS Matching Engine based on Dataset & JD requirements
 export const matchResumeJDClient = (jobDescription, detectedSkills = []) => {
-  const reqSkills = ['Python', 'React.js', 'FastAPI', 'SQL', 'Docker', 'Data Structures', 'Algorithms', 'REST APIs', 'Communication', 'Problem-Solving'];
-  
+  const taxonomy = [
+    'Python', 'React.js', 'React', 'FastAPI', 'SQL', 'Docker', 'AWS', 'Kubernetes',
+    'Data Structures', 'Algorithms', 'REST APIs', 'Machine Learning', 'Data Science',
+    'Git', 'Node.js', 'MongoDB', 'Communication', 'Problem-Solving', 'TypeScript',
+    'Java', 'C++', 'GraphQL', 'CI/CD', 'PostgreSQL', 'Microservices'
+  ];
+
   const matched = [];
   const missing = [];
 
   const lowerJD = jobDescription.toLowerCase();
+  const lowerResumeSkills = (detectedSkills || []).map(s => s.toLowerCase());
 
-  reqSkills.forEach((skill) => {
-    const isRequired = lowerJD.includes(skill.toLowerCase());
-    const hasSkill = detectedSkills.some(s => s.toLowerCase() === skill.toLowerCase()) || lowerJD.includes(skill.toLowerCase());
+  taxonomy.forEach((skill) => {
+    const isRequiredInJD = lowerJD.includes(skill.toLowerCase());
+    const hasInResume = lowerResumeSkills.includes(skill.toLowerCase());
 
-    if (isRequired && hasSkill) {
+    if (isRequiredInJD && hasInResume) {
       matched.push(skill);
-    } else if (isRequired && !hasSkill) {
+    } else if (isRequiredInJD && !hasInResume) {
       missing.push(skill);
-    } else if (hasSkill && matched.length < 5) {
-      matched.push(skill);
     }
   });
 
-  // Ensure default matched skills if list is short
+  // If missing is empty or short, add remaining target industry skills from JD or standard stack
+  const candidateMissing = ['Docker', 'AWS', 'Kubernetes', 'CI/CD', 'Microservices', 'GraphQL', 'TypeScript'];
+  candidateMissing.forEach(skill => {
+    if (!lowerResumeSkills.includes(skill.toLowerCase()) && !missing.includes(skill)) {
+      missing.push(skill);
+    }
+  });
+
+  // Default matched skills if empty
   if (matched.length === 0) {
     matched.push('Python', 'React.js', 'FastAPI', 'SQL');
-    missing.push('Docker', 'AWS', 'Kubernetes');
   }
 
-  const totalReq = matched.length + missing.length;
-  const score = Math.min(96, Math.max(55, Math.round((matched.length / (totalReq || 1)) * 100)));
+  const finalMatched = Array.from(new Set(matched)).slice(0, 8);
+  const finalMissing = Array.from(new Set(missing)).slice(0, 6);
+
+  const totalReq = finalMatched.length + finalMissing.length;
+  const score = Math.min(95, Math.max(52, Math.round((finalMatched.length / (totalReq || 1)) * 100)));
 
   return {
     match_analytics: {
       job_match_score: score,
-      matched_skills: Array.from(new Set(matched)),
-      missing_skills: Array.from(new Set(missing))
+      matched_skills: finalMatched,
+      missing_skills: finalMissing
     }
   };
 };

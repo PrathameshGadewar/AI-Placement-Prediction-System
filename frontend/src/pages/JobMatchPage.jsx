@@ -71,9 +71,14 @@ Requirements:
     }
   };
 
-  const matchScore = matchResult ? matchResult.match_analytics.job_match_score : 0;
-  const matchedSkills = matchResult ? matchResult.match_analytics.matched_skills : ['Python', 'React.js', 'FastAPI', 'SQL'];
-  const missingSkills = matchResult ? matchResult.match_analytics.missing_skills : ['Docker', 'AWS', 'Kubernetes'];
+  const analytics = matchResult ? (matchResult.match_analytics || matchResult) : null;
+  const matchScore = analytics ? (analytics.job_match_score || 0) : 0;
+  const matchedSkills = analytics && analytics.matched_skills && analytics.matched_skills.length > 0
+    ? analytics.matched_skills
+    : ['Python', 'React.js', 'FastAPI', 'SQL'];
+  const missingSkills = analytics && analytics.missing_skills && analytics.missing_skills.length > 0
+    ? analytics.missing_skills
+    : ['Docker', 'AWS', 'Kubernetes', 'CI/CD'];
 
   return (
     <div className="wrap">
