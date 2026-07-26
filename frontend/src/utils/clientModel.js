@@ -31,7 +31,7 @@ export const parseResumeClient = async (file) => {
         'Python', 'React.js', 'React', 'FastAPI', 'SQL', 'Docker', 'C++', 'Java',
         'Data Structures', 'Algorithms', 'Machine Learning', 'Git', 'AWS', 'Node.js',
         'HTML', 'CSS', 'JavaScript', 'Communication', 'Problem-Solving', 'Cybersecurity',
-        'TypeScript', 'MongoDB', 'PostgreSQL', 'Express', 'Redux'
+        'TypeScript', 'MongoDB', 'PostgreSQL', 'Express', 'Redux', 'Kubernetes', 'CI/CD'
       ];
 
       const detectedSkills = [];
@@ -57,6 +57,7 @@ export const parseResumeClient = async (file) => {
         name: candidateName,
         form_fields: {
           Name: candidateName,
+          Age: 21,
           Degree: 'B.Tech',
           Branch: 'CSE',
           CGPA: Math.min(10, Math.max(6.0, cgpa)),
@@ -80,6 +81,7 @@ export const parseResumeClient = async (file) => {
         name: name,
         form_fields: {
           Name: name,
+          Age: 21,
           Degree: 'B.Tech',
           Branch: 'CSE',
           CGPA: 8.2,
@@ -157,18 +159,19 @@ export const matchResumeJDClient = (jobDescription, detectedSkills = []) => {
     'Python', 'React.js', 'React', 'FastAPI', 'SQL', 'Docker', 'AWS', 'Kubernetes',
     'Data Structures', 'Algorithms', 'REST APIs', 'Machine Learning', 'Data Science',
     'Git', 'Node.js', 'MongoDB', 'Communication', 'Problem-Solving', 'TypeScript',
-    'Java', 'C++', 'GraphQL', 'CI/CD', 'PostgreSQL', 'Microservices'
+    'Java', 'C++', 'GraphQL', 'CI/CD', 'PostgreSQL', 'Microservices', 'DevOps', 'Go',
+    'Rust', 'Linux', 'Terraform', 'Next.js', 'Express', 'Redis', 'Kafka'
   ];
 
   const matched = [];
   const missing = [];
 
-  const lowerJD = jobDescription.toLowerCase();
+  const lowerJD = (jobDescription || '').toLowerCase();
   const lowerResumeSkills = (detectedSkills || []).map(s => s.toLowerCase());
 
   taxonomy.forEach((skill) => {
     const isRequiredInJD = lowerJD.includes(skill.toLowerCase());
-    const hasInResume = lowerResumeSkills.includes(skill.toLowerCase());
+    const hasInResume = lowerResumeSkills.some(rs => rs === skill.toLowerCase() || (skill === 'React.js' && rs === 'react'));
 
     if (isRequiredInJD && hasInResume) {
       matched.push(skill);
@@ -177,24 +180,23 @@ export const matchResumeJDClient = (jobDescription, detectedSkills = []) => {
     }
   });
 
-  // If missing is empty or short, add remaining target industry skills from JD or standard stack
-  const candidateMissing = ['Docker', 'AWS', 'Kubernetes', 'CI/CD', 'Microservices', 'GraphQL', 'TypeScript'];
-  candidateMissing.forEach(skill => {
-    if (!lowerResumeSkills.includes(skill.toLowerCase()) && !missing.includes(skill)) {
-      missing.push(skill);
-    }
-  });
-
-  // Default matched skills if empty
   if (matched.length === 0) {
     matched.push('Python', 'React.js', 'FastAPI', 'SQL');
+  }
+
+  if (missing.length === 0) {
+    ['Docker', 'AWS', 'Kubernetes', 'CI/CD'].forEach(skill => {
+      if (!lowerResumeSkills.includes(skill.toLowerCase()) && !matched.includes(skill)) {
+        missing.push(skill);
+      }
+    });
   }
 
   const finalMatched = Array.from(new Set(matched)).slice(0, 8);
   const finalMissing = Array.from(new Set(missing)).slice(0, 6);
 
   const totalReq = finalMatched.length + finalMissing.length;
-  const score = Math.min(95, Math.max(52, Math.round((finalMatched.length / (totalReq || 1)) * 100)));
+  const score = Math.min(96, Math.max(50, Math.round((finalMatched.length / (totalReq || 1)) * 100)));
 
   return {
     match_analytics: {

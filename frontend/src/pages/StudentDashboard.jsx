@@ -34,6 +34,49 @@ const StudentDashboard = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const calculateClientScore = () => {
+    const cgpa = Number(formData.CGPA) || 7.5;
+    const apt = Number(formData.Aptitude_Test_Score) || 75;
+    const code = Number(formData.Coding_Skills) || 7;
+    const comm = Number(formData.Communication_Skills) || 7;
+    const intern = Number(formData.Internships) || 1;
+    const proj = Number(formData.Projects) || 2;
+    const cert = Number(formData.Certifications) || 1;
+    const back = Number(formData.Backlogs) || 0;
+
+    const contributions = [
+      { name: 'CGPA', val: (cgpa / 10) * 25 },
+      { name: 'Aptitude', val: (apt / 100) * 20 },
+      { name: 'Coding Skills', val: (code / 10) * 22 },
+      { name: 'Communication', val: (comm / 10) * 14 },
+      { name: 'Internships', val: (Math.min(intern, 3) / 3) * 9 },
+      { name: 'Projects', val: (Math.min(proj, 5) / 5) * 7 },
+      { name: 'Certifications', val: (Math.min(cert, 5) / 5) * 4 },
+      { name: 'Backlogs', val: -back * 7 },
+    ];
+
+    let score = contributions.reduce((s, c) => s + c.val, 5);
+    score = Math.max(2, Math.min(98, score));
+
+    const baseline = 12.5;
+    const sorted = [...contributions].sort((a, b) => Math.abs(b.val - baseline) - Math.abs(a.val - baseline)).slice(0, 5);
+    const maxAbs = Math.max(...sorted.map((c) => Math.abs(c.val - baseline)), 1);
+
+    const factorList = sorted.map((c) => {
+      const delta = c.val - baseline;
+      const pct = Math.min(100, (Math.abs(delta) / maxAbs) * 100);
+      const positive = delta >= 0;
+      return {
+        feature: c.name,
+        impact: (positive ? '+' : '') + delta.toFixed(1),
+        pct,
+        positive
+      };
+    });
+
+    return { score, factorList };
+  };
+
   const startAnalyzingSequence = (onComplete) => {
     setAnalyzing(true);
     setPrediction(null);
@@ -86,7 +129,6 @@ const StudentDashboard = () => {
       });
 
     } catch (err) {
-      // Offline / Vercel fallback: compute using trained dataset model
       startAnalyzingSequence(() => {
         setPrediction(clientPrediction);
         setLoading(false);
@@ -111,7 +153,6 @@ const StudentDashboard = () => {
       setAnalysisStep('Running XGBoost Model Inference & Calculating SHAP Values...');
     }, 3200);
 
-    // Client NLP resume parsing
     const extractedInfo = await parseResumeClient(file);
 
     const bodyData = new FormData();
@@ -150,7 +191,6 @@ const StudentDashboard = () => {
       }, 5000);
 
     } catch (err) {
-      // Fallback for Vercel / offline mode: compute via dataset model
       setTimeout(() => {
         if (extractedInfo && extractedInfo.form_fields) {
           setFormData((prev) => ({
@@ -268,8 +308,10 @@ const StudentDashboard = () => {
                     <label className="field-label">Age</label>
                     <input
                       type="number"
+                      min="15"
+                      max="100"
                       value={formData.Age}
-                      onChange={(e) => handleInputChange('Age', parseInt(e.target.value) || 21)}
+                      onChange={(e) => handleInputChange('Age', e.target.value === '' ? '' : parseInt(e.target.value, 10))}
                     />
                   </div>
                   <div>
@@ -342,7 +384,7 @@ const StudentDashboard = () => {
                       max="100"
                       step="1"
                       value={formData.Aptitude_Test_Score}
-                      onChange={(e) => handleInputChange('Aptitude_Test_Score', parseInt(e.target.value))}
+                      onChange={(e) => handleInputChange('Aptitude_Test_Score', parseInt(e.target.value, 10) || 0)}
                       style={{ backgroundSize: `${(formData.Aptitude_Test_Score / 100) * 100}% 100%` }}
                     />
                     <div className="tick-row"><span>0</span><span>50</span><span>100</span></div>
@@ -361,7 +403,7 @@ const StudentDashboard = () => {
                       max="10"
                       step="1"
                       value={formData.Coding_Skills}
-                      onChange={(e) => handleInputChange('Coding_Skills', parseInt(e.target.value))}
+                      onChange={(e) => handleInputChange('Coding_Skills', parseInt(e.target.value, 10) || 1)}
                       style={{ backgroundSize: `${((formData.Coding_Skills - 1) / 9) * 100}% 100%` }}
                     />
                     <div className="tick-row"><span>1</span><span>5</span><span>10</span></div>
@@ -378,7 +420,7 @@ const StudentDashboard = () => {
                       max="10"
                       step="1"
                       value={formData.Communication_Skills}
-                      onChange={(e) => handleInputChange('Communication_Skills', parseInt(e.target.value))}
+                      onChange={(e) => handleInputChange('Communication_Skills', parseInt(e.target.value, 10) || 1)}
                       style={{ backgroundSize: `${((formData.Communication_Skills - 1) / 9) * 100}% 100%` }}
                     />
                     <div className="tick-row"><span>1</span><span>5</span><span>10</span></div>
@@ -392,7 +434,7 @@ const StudentDashboard = () => {
                       type="number"
                       min="0"
                       value={formData.Internships}
-                      onChange={(e) => handleInputChange('Internships', parseInt(e.target.value) || 0)}
+                      onChange={(e) => handleInputChange('Internships', e.target.value === '' ? '' : parseInt(e.target.value, 10))}
                     />
                   </div>
                   <div>
@@ -401,7 +443,7 @@ const StudentDashboard = () => {
                       type="number"
                       min="0"
                       value={formData.Projects}
-                      onChange={(e) => handleInputChange('Projects', parseInt(e.target.value) || 0)}
+                      onChange={(e) => handleInputChange('Projects', e.target.value === '' ? '' : parseInt(e.target.value, 10))}
                     />
                   </div>
                   <div>
@@ -410,7 +452,7 @@ const StudentDashboard = () => {
                       type="number"
                       min="0"
                       value={formData.Certifications}
-                      onChange={(e) => handleInputChange('Certifications', parseInt(e.target.value) || 0)}
+                      onChange={(e) => handleInputChange('Certifications', e.target.value === '' ? '' : parseInt(e.target.value, 10))}
                     />
                   </div>
                   <div>
@@ -419,7 +461,7 @@ const StudentDashboard = () => {
                       type="number"
                       min="0"
                       value={formData.Backlogs}
-                      onChange={(e) => handleInputChange('Backlogs', parseInt(e.target.value) || 0)}
+                      onChange={(e) => handleInputChange('Backlogs', e.target.value === '' ? '' : parseInt(e.target.value, 10))}
                     />
                   </div>
                 </div>
